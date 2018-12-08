@@ -115,8 +115,19 @@ public class MainActivity extends AppCompatActivity {
         return dialog;
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Context context = getApplicationContext();
 
+        gameBoard.onResumeMainActivity(context);
+    }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        gameBoard.onPauseMainActivity();
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

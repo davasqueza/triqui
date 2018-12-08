@@ -4,16 +4,27 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
+import android.media.MediaPlayer;
+import android.os.Handler;
 import android.view.MotionEvent;
 import android.view.View;
 import java.util.Random;
 
 public class GameBoard extends View {
-    Paint paint = new Paint();
+    Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Random genericRandom;
+    private Bitmap player1Bitmap;
+    private Bitmap player2Bitmap;
+    MediaPlayer player1Player;
+    MediaPlayer player2Player;
+
+
     Context activity;
 
     public enum BoardStatus {
@@ -47,8 +58,20 @@ public class GameBoard extends View {
         paint.setColor(Color.BLACK);
         paint.setStrokeWidth(10);
 
-        this.setBackgroundColor(Color.WHITE);
+        player1Bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.player1);
+        player2Bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.player2);
     }
+
+    public void onResumeMainActivity(Context context) {
+        player1Player = MediaPlayer.create(context, R.raw.player1);
+        player2Player = MediaPlayer.create(context, R.raw.player2);
+    }
+
+    public void onPauseMainActivity() {
+        player1Player.release();
+        player2Player.release();
+    }
+
 
     public DifficultyLevel getDifficultyLevel() {
         return currentDifficulty;
@@ -105,14 +128,7 @@ public class GameBoard extends View {
 
                 if(x < columnLine && y < rowLine){
                     playTurn(row, column);
-                    invalidate();
-
-                    GameStatus gameStatus = validateWin();
-
-                    if(gameStatus == GameStatus.UNFINISHED){
-                        playComputerTurn();
-                        invalidate();
-                    }
+                    playComputerTurn();
                     return true;
                 }
             }
@@ -124,6 +140,15 @@ public class GameBoard extends View {
     void playTurn(int row, int column){
         if(board[row-1][column-1] != BoardStatus.FREE){return;}
         board[row-1][column-1] = currentPlayer;
+
+        if(currentPlayer == BoardStatus.FIRST){
+            player1Player.start();
+        }
+        else {
+            player2Player.start();
+        }
+
+        invalidate();
 
         GameStatus status = validateWin();
 
@@ -143,8 +168,16 @@ public class GameBoard extends View {
     }
 
     void playComputerTurn(){
-        Position computerMove = getComputerMove();
-        playTurn(computerMove.getRow(), computerMove.getColumn());
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            public void run() {
+                GameStatus gameStatus = validateWin();
+                if(gameStatus == GameStatus.UNFINISHED){
+                    Position computerMove = getComputerMove();
+                    playTurn(computerMove.getRow(), computerMove.getColumn());
+                }
+            }
+        }, 1000);
     }
 
     void drawTurn(Canvas canvas, BoardStatus status, int row, int column){
@@ -157,11 +190,16 @@ public class GameBoard extends View {
 
         switch (status){
             case FIRST:
-                canvas.drawLine(x1, y1, x2, y2, paint);
-                canvas.drawLine(x1, y2, x2, y1, paint);
+                canvas.drawBitmap(player1Bitmap,
+                        null,  // src
+                        new Rect(x1, y1, x2, y2),  // dest
+                        null);
                 break;
             case SECOND:
-                canvas.drawCircle((x1 + x2 )/2, (y1 + y2)/2, boxWidth/2 ,paint);
+                canvas.drawBitmap(player2Bitmap,
+                        null,  // src
+                        new Rect(x1, y1, x2, y2),  // dest
+                        null);
                 break;
         }
     }
