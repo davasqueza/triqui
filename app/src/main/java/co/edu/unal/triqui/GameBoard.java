@@ -9,9 +9,11 @@ import android.graphics.Color;
 import android.graphics.Paint;
 import android.view.MotionEvent;
 import android.view.View;
+import java.util.Random;
 
 public class GameBoard extends View {
     Paint paint = new Paint();
+    private Random genericRandom;
     Context activity;
 
     public enum BoardStatus {
@@ -26,6 +28,12 @@ public class GameBoard extends View {
         UNFINISHED
     }
 
+    public enum DifficultyLevel {
+        Easy,
+        Harder,
+        Expert
+    };
+
     BoardStatus[][] board = new BoardStatus[][] {
             { BoardStatus.FREE, BoardStatus.FREE, BoardStatus.FREE},
             { BoardStatus.FREE, BoardStatus.FREE, BoardStatus.FREE},
@@ -33,6 +41,7 @@ public class GameBoard extends View {
     };
 
     BoardStatus currentPlayer = BoardStatus.FIRST;
+    private DifficultyLevel currentDifficulty = DifficultyLevel.Easy;
 
     void init() {
         paint.setColor(Color.BLACK);
@@ -41,9 +50,19 @@ public class GameBoard extends View {
         this.setBackgroundColor(Color.WHITE);
     }
 
+    public DifficultyLevel getDifficultyLevel() {
+        return currentDifficulty;
+    }
+
+    public void setDifficultyLevel(DifficultyLevel difficultyLevel) {
+        currentDifficulty = difficultyLevel;
+    }
+
     public GameBoard(Context context) {
         super(context);
         activity = context;
+        genericRandom = new Random();
+
         init();
     }
 
@@ -87,6 +106,13 @@ public class GameBoard extends View {
                 if(x < columnLine && y < rowLine){
                     playTurn(row, column);
                     invalidate();
+
+                    GameStatus gameStatus = validateWin();
+
+                    if(gameStatus == GameStatus.UNFINISHED){
+                        playComputerTurn();
+                        invalidate();
+                    }
                     return true;
                 }
             }
@@ -114,6 +140,11 @@ public class GameBoard extends View {
                         BoardStatus.SECOND : BoardStatus.FIRST;
                 break;
         }
+    }
+
+    void playComputerTurn(){
+        Position computerMove = getComputerMove();
+        playTurn(computerMove.getRow(), computerMove.getColumn());
     }
 
     void drawTurn(Canvas canvas, BoardStatus status, int row, int column){
@@ -159,6 +190,87 @@ public class GameBoard extends View {
                 { BoardStatus.FREE, BoardStatus.FREE, BoardStatus.FREE}
         };
         invalidate();
+    }
+
+    public Position getRandomMove() {
+        Position position;
+        int row, column;
+
+        do {
+            row = genericRandom.nextInt(3);
+            column = genericRandom.nextInt(3);
+        }
+        while (board[row][column] != BoardStatus.FREE);
+
+        position = new Position(row, column);
+
+        return position;
+    }
+
+    public Position getBlockingMove() {
+        Position position = null;
+
+        for (int row = 0; row < 3; row++){
+            for (int column = 0; column < 3; column++){
+                BoardStatus positionStatus = board[row][column];
+                if(positionStatus != BoardStatus.FREE){
+                    continue;
+                }
+                board[row][column] = BoardStatus.FIRST;
+                GameStatus gameStatus = validateWin();
+                board[row][column] = positionStatus;
+
+                if(gameStatus == GameStatus.WON){
+                    position = new Position(row,column);
+                }
+            }
+        }
+
+        return position;
+    }
+
+    public Position getWinningMove() {
+        Position position = null;
+
+        for (int row = 0; row < 3; row++){
+            for (int column = 0; column < 3; column++){
+                BoardStatus positionStatus = board[row][column];
+                if(positionStatus != BoardStatus.FREE){
+                    continue;
+                }
+                board[row][column] = BoardStatus.SECOND;
+                GameStatus gameStatus = validateWin();
+                board[row][column] = positionStatus;
+
+                if(gameStatus == GameStatus.WON){
+                    position = new Position(row,column);
+                }
+            }
+        }
+
+        return position;
+    }
+
+    public Position getComputerMove() {
+        Position position = null;
+
+        if (currentDifficulty == DifficultyLevel.Easy)
+            position = getRandomMove();
+        else if (currentDifficulty == DifficultyLevel.Harder) {
+            position = getWinningMove();
+            if (position.getColumn() == -1)
+                position = getRandomMove();
+        } else if (currentDifficulty == DifficultyLevel.Expert) {
+            // Try to win, but if that's not possible,block.
+            // If that's not possible, position anywhere.
+            position = getWinningMove();
+            if (position == null)
+                position = getBlockingMove();
+            if (position == null)
+                position = getRandomMove();
+        }
+
+        return position;
     }
 
     GameStatus validateWin(){

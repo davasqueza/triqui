@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TableLayout
+        android:id="@+id/about_grid"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="5dp">
+        <RelativeLayout
+            android:gravity="center_horizontal">
+            <ImageView
+                android:id="@+id/triqui"
+                android:layout_width="300dp"
+                android:layout_height="300dp"
+                android:src="@drawable/triqui" />
+        </RelativeLayout>
+        <RelativeLayout
+            android:gravity="center_horizontal">
+            <TextView
+                android:id="@+id/title_game"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Triqui Mejorado"
+                android:textSize="20dp"/>
+        </RelativeLayout>
+        <RelativeLayout
+            android:gravity="center_horizontal">
+            <TextView
+                android:id="@+id/author"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="By: Diego Vásquez"
+                android:textSize="20dp"
+                />
+        </RelativeLayout>
+        <RelativeLayout>
+            <TextView
+                android:id="@+id/game_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Selecciona uno de los tres niveles de dificultad ¡¡Ganale a la IA!!"
+                android:textSize="20dp"
+                />
+        </RelativeLayout>
+    </TableLayout>
+
+</android.support.constraint.ConstraintLayout>

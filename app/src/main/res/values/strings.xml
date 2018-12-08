@@ -1,3 +1,16 @@
 <resources>
-    <string name="app_name">Triqui</string>
+    <string name="app_name">Triqui mejorado</string>
+    <string name="quit_question">¿Estás seguro que deseas salir?</string>
+    <string name="yes">Aceptar</string>
+    <string name="no">Cancelar</string>
+	<string name="first_human">Juegas primero.</string>
+    <string name="turn_human">Tu turno.</string>
+    <string name="turn_computer">Turno de la IA.</string>
+    <string name="result_human_wins">Has ganado!</string>
+    <string name="result_computer_wins">Has perdido!</string>
+    <string name="result_tie">Empate!!</string>
+    <string name="difficulty_choose">Selecciona la dificultad:</string>
+    <string name="difficulty_easy">Fácil</string>
+    <string name="difficulty_harder">Difícil</string>
+    <string name="difficulty_expert">Experto</string>
 </resources>
