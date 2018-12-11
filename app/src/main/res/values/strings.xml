@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Triqui rotación</string>
+    <string name="app_name">Triqui preferencias</string>
     <string name="quit_question">¿Estás seguro que deseas salir?</string>
     <string name="yes">Aceptar</string>
     <string name="no">Cancelar</string>

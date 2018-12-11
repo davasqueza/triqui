@@ -14,12 +14,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.content.Intent;
 
 public class MainActivity extends AppCompatActivity {
     GameBoard gameBoard;
     private SharedPreferences mPrefs;
 
-    static final int DIALOG_DIFFICULTY_ID = 0;
+    static final int DIALOG_SETTINGS = 0;
     static final int DIALOG_QUIT_ID = 1;
     static final int DIALOG_ABOUT = 2;
 
@@ -38,11 +39,9 @@ public class MainActivity extends AppCompatActivity {
             case R.id.new_game:
                 startNewGame();
                 return true;
-            case R.id.ai_difficulty:
-                showDialog(DIALOG_DIFFICULTY_ID);
-                return true;
+            case R.id.settings:
+                startActivityForResult(new Intent(this, Settings.class), 0);
             case R.id.quit:
-                showDialog(DIALOG_QUIT_ID);
                 return true;
             case R.id.reset:
                 resetScore();
@@ -61,41 +60,6 @@ public class MainActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         switch (id) {
-            case DIALOG_DIFFICULTY_ID:
-
-                builder.setTitle(R.string.difficulty_choose);
-
-                final CharSequence[] levels = {
-                        getResources().getString(R.string.difficulty_easy),
-                        getResources().getString(R.string.difficulty_harder),
-                        getResources().getString(R.string.difficulty_expert)};
-
-                int selected = 0;
-
-                builder.setSingleChoiceItems(levels, selected,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int item) {
-                                dialog.dismiss();
-
-                                switch (item) {
-                                    case 0:
-                                        gameBoard.setDifficultyLevel(GameBoard.DifficultyLevel.Easy);
-                                        break;
-                                    case 1:
-                                        gameBoard.setDifficultyLevel(GameBoard.DifficultyLevel.Harder);
-                                        break;
-                                    case 2:
-                                        gameBoard.setDifficultyLevel(GameBoard.DifficultyLevel.Expert);
-                                        break;
-                                }
-
-                                Toast.makeText(getApplicationContext(), levels[item],
-                                        Toast.LENGTH_SHORT).show();
-                            }
-                        });
-                dialog = builder.create();
-                break;
             case DIALOG_QUIT_ID:
                 // Create the quit confirmation dialog
 
@@ -176,6 +140,30 @@ public class MainActivity extends AppCompatActivity {
         ed.commit();
     }
 
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if (requestCode == RESULT_CANCELED) {
+            // Apply potentially new settings
+            loadSettings();
+        }
+    }
+
+    private void loadSettings(){
+        Boolean soundEnabled = mPrefs.getBoolean("sound", true);
+        String difficultyLevel = mPrefs.getString("difficulty_level", getString(R.string.difficulty_easy));
+        String victoryMessage = mPrefs.getString("victory_message", getString(R.string.result_human_wins));
+
+        if (difficultyLevel.equals(getResources().getString(R.string.difficulty_easy)))
+            gameBoard.setDifficultyLevel(GameBoard.DifficultyLevel.Easy);
+        else if (difficultyLevel.equals(getResources().getString(R.string.difficulty_harder)))
+            gameBoard.setDifficultyLevel(GameBoard.DifficultyLevel.Harder);
+        else
+            gameBoard.setDifficultyLevel(GameBoard.DifficultyLevel.Expert);
+
+        gameBoard.setSound(soundEnabled);
+        gameBoard.setVictoryMessage(victoryMessage);
+    }
+
     private void resetScore(){
         gameBoard.setHumanWin(0);
         gameBoard.setComputerWin(0);
@@ -204,5 +192,6 @@ public class MainActivity extends AppCompatActivity {
     private void startNewGame(){
         gameBoard = findViewById(R.id.board);
         initializeScores();
+        loadSettings();
     }
 }

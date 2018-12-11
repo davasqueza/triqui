@@ -33,6 +33,8 @@ public class GameBoard extends View {
     private TextView humanTextView;
     private TextView computerTextView;
     private TextView tiesTextView;
+    private Boolean soundEnabled;
+    private String victoryMessage;
 
     public enum BoardStatus {
         FREE,
@@ -131,6 +133,14 @@ public class GameBoard extends View {
         currentDifficulty = difficultyLevel;
     }
 
+    public void setSound(Boolean soundEnabled) {
+        this.soundEnabled = soundEnabled;
+    }
+
+    public void setVictoryMessage(String victoryMessage) {
+        this.victoryMessage = victoryMessage;
+    }
+
     @Override
     public void onDraw(Canvas canvas) {
         int viewWidth = canvas.getWidth();
@@ -185,11 +195,13 @@ public class GameBoard extends View {
         if(board[row-1][column-1] != BoardStatus.FREE){return;}
         board[row-1][column-1] = currentPlayer;
 
-        if(currentPlayer == BoardStatus.FIRST){
-            player1Player.start();
-        }
-        else {
-            player2Player.start();
+        if(soundEnabled){
+            if(currentPlayer == BoardStatus.FIRST){
+                player1Player.start();
+            }
+            else {
+                player2Player.start();
+            }
         }
 
         invalidate();
@@ -200,7 +212,7 @@ public class GameBoard extends View {
             case WON:
                 String winner;
                 if(currentPlayer == BoardStatus.FIRST){
-                    winner = "Felicitaciones, has ganado";
+                    winner = victoryMessage;
                     humanWin += 1;
                 }
                 else{
@@ -351,7 +363,7 @@ public class GameBoard extends View {
             position = getRandomMove();
         else if (currentDifficulty == DifficultyLevel.Harder) {
             position = getWinningMove();
-            if (position.getColumn() == -1)
+            if (position == null)
                 position = getRandomMove();
         } else if (currentDifficulty == DifficultyLevel.Expert) {
             // Try to win, but if that's not possible,block.
