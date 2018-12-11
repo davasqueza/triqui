@@ -6,6 +6,9 @@
     <item android:id="@+id/ai_difficulty"
         android:title="Dificultad"
         android:icon="@drawable/difficulty_level" />
+    <item android:id="@+id/reset"
+        android:title="Reiniciar puntuación"
+        android:icon="@drawable/quit_game" />
     <item android:id="@+id/quit"
         android:title="Salir"
         android:icon="@drawable/quit_game" />

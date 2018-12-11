@@ -12,20 +12,27 @@ import android.graphics.Paint;
 import android.graphics.Rect;
 import android.media.MediaPlayer;
 import android.os.Handler;
+import android.util.AttributeSet;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.TextView;
+
 import java.util.Random;
 
 public class GameBoard extends View {
-    Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+    private Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private Random genericRandom;
     private Bitmap player1Bitmap;
     private Bitmap player2Bitmap;
-    MediaPlayer player1Player;
-    MediaPlayer player2Player;
-
-
-    Context activity;
+    private MediaPlayer player1Player;
+    private MediaPlayer player2Player;
+    private Context activity;
+    private int humanWin;
+    private int computerWin;
+    private int ties;
+    private TextView humanTextView;
+    private TextView computerTextView;
+    private TextView tiesTextView;
 
     public enum BoardStatus {
         FREE,
@@ -54,9 +61,29 @@ public class GameBoard extends View {
     BoardStatus currentPlayer = BoardStatus.FIRST;
     private DifficultyLevel currentDifficulty = DifficultyLevel.Easy;
 
+    public GameBoard(Context context) {
+        super(context);
+        activity = context;
+
+        init();
+    }
+
+    public GameBoard(Context context, AttributeSet attributeSet) {
+        super(context, attributeSet);
+        activity = context;
+
+        init();
+    }
+
     void init() {
+        humanWin = 0;
+        computerWin = 0;
+        ties = 0;
+
         paint.setColor(Color.BLACK);
         paint.setStrokeWidth(10);
+
+        genericRandom = new Random();
 
         player1Bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.player1);
         player2Bitmap = BitmapFactory.decodeResource(getResources(), R.drawable.player2);
@@ -72,6 +99,29 @@ public class GameBoard extends View {
         player2Player.release();
     }
 
+    public int getHumanWin() {
+        return humanWin;
+    }
+
+    public void setHumanWin(int humanWin){
+        this.humanWin = humanWin;
+    }
+
+    public int getComputerWin() {
+        return computerWin;
+    }
+
+    public void setComputerWin(int computerWin){
+        this.computerWin = computerWin;
+    }
+
+    public int getTies() {
+        return ties;
+    }
+
+    public void setTies(int ties){
+        this.ties = ties;
+    }
 
     public DifficultyLevel getDifficultyLevel() {
         return currentDifficulty;
@@ -79,14 +129,6 @@ public class GameBoard extends View {
 
     public void setDifficultyLevel(DifficultyLevel difficultyLevel) {
         currentDifficulty = difficultyLevel;
-    }
-
-    public GameBoard(Context context) {
-        super(context);
-        activity = context;
-        genericRandom = new Random();
-
-        init();
     }
 
     @Override
@@ -127,6 +169,8 @@ public class GameBoard extends View {
                 int columnLine = viewWidth/3 * column;
 
                 if(x < columnLine && y < rowLine){
+                    if(board[row-1][column-1] != BoardStatus.FREE){return true;}
+
                     playTurn(row, column);
                     playComputerTurn();
                     return true;
@@ -154,10 +198,19 @@ public class GameBoard extends View {
 
         switch (status){
             case WON:
-                String winner = (currentPlayer == BoardStatus.FIRST) ? "equis" : "circulo";
-                showAlert("Victoria", "Felicitaciones, gana "+winner);
+                String winner;
+                if(currentPlayer == BoardStatus.FIRST){
+                    winner = "Felicitaciones, has ganado";
+                    humanWin += 1;
+                }
+                else{
+                    winner = "Ups, ha ganado el computador";
+                    computerWin += 1;
+                }
+                showAlert("Victoria", winner);
                 break;
             case DRAW_GAME:
+                ties += 1;
                 showAlert("Empate", "¡Mejor suerte para la próxima!");
                 break;
             case UNFINISHED:
@@ -165,6 +218,8 @@ public class GameBoard extends View {
                         BoardStatus.SECOND : BoardStatus.FIRST;
                 break;
         }
+
+        displayScores();
     }
 
     void playComputerTurn(){
@@ -311,7 +366,47 @@ public class GameBoard extends View {
         return position;
     }
 
-    GameStatus validateWin(){
+    public int[] getBoardState(){
+        int status[] = new int[9];
+
+        for (int row = 0; row < 3; row++) {
+            for (int column = 0; column < 3; column++) {
+                int positionStatus = board[row][column].ordinal();
+                int linearPosition = (row * 3) + column;
+
+                status[linearPosition] = positionStatus;
+            }
+        }
+
+        return status;
+    }
+
+    public void setBoardState(int[] status){
+        for (int row = 0; row < 3; row++) {
+            for (int column = 0; column < 3; column++) {
+                int linearPosition = (row * 3) + column;
+                board[row][column] = BoardStatus.values()[status[linearPosition]];
+            }
+        }
+    }
+
+    public void setHumanTextView(TextView humanTextView){
+        this.humanTextView = humanTextView;
+    }
+    public void setComputerTextView(TextView computerTextView){
+        this.computerTextView = computerTextView;
+    }
+    public void setTiesTextView(TextView tiesTextView){
+        this.tiesTextView = tiesTextView;
+    }
+
+    public void displayScores(){
+        humanTextView.setText(Integer.toString(getHumanWin()));
+        computerTextView.setText(Integer.toString(getComputerWin()));
+        tiesTextView.setText(Integer.toString(getTies()));
+    }
+
+    public GameStatus validateWin(){
         /* Diagonales */
         if(board[0][0] != BoardStatus.FREE && board[1][1] != BoardStatus.FREE  && board[2][2] != BoardStatus.FREE
                 && board[0][0] == board[1][1] && board[0][0] == board[2][2]){

@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -11,10 +12,12 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity {
     GameBoard gameBoard;
+    private SharedPreferences mPrefs;
 
     static final int DIALOG_DIFFICULTY_ID = 0;
     static final int DIALOG_QUIT_ID = 1;
@@ -40,6 +43,9 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case R.id.quit:
                 showDialog(DIALOG_QUIT_ID);
+                return true;
+            case R.id.reset:
+                resetScore();
                 return true;
             case R.id.about:
                 showDialog(DIALOG_ABOUT);
@@ -130,13 +136,73 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putIntArray("board", gameBoard.getBoardState());
+        outState.putInt("mHumanWins", gameBoard.getHumanWin());
+        outState.putInt("mComputerWins", gameBoard.getComputerWin());
+        outState.putInt("mTies", gameBoard.getTies());
+        outState.putInt("mDifficulty", gameBoard.getDifficultyLevel().ordinal());
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        gameBoard.setBoardState(savedInstanceState.getIntArray("board"));
+        gameBoard.setHumanWin(savedInstanceState.getInt("mHumanWins"));
+        gameBoard.setComputerWin(savedInstanceState.getInt("mComputerWins"));
+        gameBoard.setTies(savedInstanceState.getInt("mTies"));
+        gameBoard.setDifficultyLevel(GameBoard.DifficultyLevel.values()[savedInstanceState.getInt("mDifficulty")]);
+        gameBoard.displayScores();
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+
         startNewGame();
     }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+
+        // Save the current scores
+        SharedPreferences.Editor ed = mPrefs.edit();
+        ed.putInt("mHumanWins", gameBoard.getHumanWin());
+        ed.putInt("mComputerWins", gameBoard.getComputerWin());
+        ed.putInt("mTiesWins", gameBoard.getTies());
+        ed.commit();
+    }
+
+    private void resetScore(){
+        gameBoard.setHumanWin(0);
+        gameBoard.setComputerWin(0);
+        gameBoard.setTies(0);
+
+        gameBoard.displayScores();
+    }
+
+    private void initializeScores(){
+        gameBoard.setHumanTextView((TextView) findViewById(R.id.human_wins));
+        gameBoard.setComputerTextView((TextView) findViewById(R.id.computer_wins));
+        gameBoard.setTiesTextView((TextView) findViewById(R.id.ties_wins));
+
+        mPrefs = getSharedPreferences("ttt_prefs", MODE_PRIVATE);
+        int humanWins = mPrefs.getInt("mHumanWins", 0);
+        int computerWins = mPrefs.getInt("mComputerWins", 0);
+        int tiesWins = mPrefs.getInt("mTiesWins", 0);
+
+        gameBoard.setHumanWin(humanWins);
+        gameBoard.setComputerWin(computerWins);
+        gameBoard.setTies(tiesWins);
+
+        gameBoard.displayScores();
+    }
+
     private void startNewGame(){
-        gameBoard = new GameBoard(this);
-        setContentView(gameBoard);
+        gameBoard = findViewById(R.id.board);
+        initializeScores();
     }
 }
